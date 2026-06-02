@@ -14,7 +14,7 @@ USE ROLE ACCOUNTADMIN;
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
 CREATE WAREHOUSE IF NOT EXISTS GLACIERSTYLE_WH
-    WAREHOUSE_SIZE      = 'large'   -- 初期セットアップ用（完了後 XSmall にスケールダウン）
+    WAREHOUSE_SIZE      = 'xsmall'
     WAREHOUSE_TYPE      = 'standard'
     AUTO_SUSPEND        = 60
     AUTO_RESUME         = TRUE
@@ -283,6 +283,6 @@ WITH parsed AS (
 SELECT * FROM parsed;
 
 -- -----------------------------------------------
--- Step 10. ウェアハウスをスケールダウン
+-- Step 10. セットアップ完了
 -- -----------------------------------------------
-ALTER WAREHOUSE GLACIERSTYLE_WH SET WAREHOUSE_SIZE = 'XSmall';
+SELECT 'Setup complete!' AS status;
