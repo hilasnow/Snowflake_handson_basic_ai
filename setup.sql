@@ -7,6 +7,26 @@
 --                  → このリポジトリの data/ に同梱
 -- =============================================================
 
+-- ===============================================================
+-- !! Step 0 (事前作業) ファイルのアップロード !!
+--
+-- このスクリプトを実行する前に、以下の手順でファイルをアップロードしてください。
+-- ※ ファイルがない状態で実行するとデータが空のまま終了します。
+--
+-- 1. リポジトリの data/ フォルダをローカルにダウンロード
+--    https://github.com/hilasnow/Snowflake_handson_basic_ai
+--
+-- 2. setup.sql の Step 1〜3 を先に実行（DB・WH・ステージを作成）
+--
+-- 3. Snowsight で DATA_STAGE にファイルをアップロード:
+--    左メニュー > Data > Databases > GLACIERSTYLE_DB
+--    > EC_ANALYTICS_SCHEMA > Stages > DATA_STAGE を開く
+--    右上の「+ Files」ボタンから data/ 内の全ファイルを選択
+--    （CSV / JSON / PDF / voice_logs/*.mp3 をすべてアップロード）
+--
+-- 4. アップロード確認後、Step 4 以降を実行
+-- ===============================================================
+
 -- -----------------------------------------------
 -- Step 1. 環境設定
 -- -----------------------------------------------
@@ -36,18 +56,10 @@ CREATE OR REPLACE STAGE DATA_STAGE
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
     DIRECTORY  = (ENABLE = TRUE);
 
+-- !! ここで一旦止めてファイルをアップロードしてください（Step 0 参照）!!
+
 -- -----------------------------------------------
--- Step 4. データファイルのアップロード（手動）
---
--- 事前にリポジトリの data/ フォルダを手元にダウンロードしておく。
--- https://github.com/hilasnow/Snowflake_handson_basic_ai
---
--- Snowsight での手順:
---   1. 左メニュー > Data > Databases > GLACIERSTYLE_DB
---      > EC_ANALYTICS_SCHEMA > Stages > DATA_STAGE を開く
---   2. 右上の「+ Files」ボタンから data/ 内の全ファイルを選択してアップロード
---      （CSV / JSON / PDF / voice_logs/*.mp3 をすべてアップロード）
---   3. アップロード完了後、以下を実行してディレクトリを更新
+-- Step 4. ステージ更新（アップロード後に実行）
 -- -----------------------------------------------
 ALTER STAGE DATA_STAGE REFRESH;
 
@@ -283,6 +295,15 @@ WITH parsed AS (
 SELECT * FROM parsed;
 
 -- -----------------------------------------------
--- Step 10. セットアップ完了
+-- Step 10. セットアップ確認
+-- 各テーブルの件数が 0 の場合はファイルアップロードが未完了です。
 -- -----------------------------------------------
-SELECT 'Setup complete!' AS status;
+SELECT 'dim_customers'    AS table_name, COUNT(*) AS row_count FROM dim_customers    UNION ALL
+SELECT 'dim_products'     AS table_name, COUNT(*) AS row_count FROM dim_products     UNION ALL
+SELECT 'fact_orders'      AS table_name, COUNT(*) AS row_count FROM fact_orders      UNION ALL
+SELECT 'fact_payments'    AS table_name, COUNT(*) AS row_count FROM fact_payments    UNION ALL
+SELECT 'fact_web_logs'    AS table_name, COUNT(*) AS row_count FROM fact_web_logs    UNION ALL
+SELECT 'raw_sns_mentions' AS table_name, COUNT(*) AS row_count FROM raw_sns_mentions UNION ALL
+SELECT 'raw_voice_logs'   AS table_name, COUNT(*) AS row_count FROM raw_voice_logs   UNION ALL
+SELECT 'raw_ad_creatives' AS table_name, COUNT(*) AS row_count FROM raw_ad_creatives
+ORDER BY table_name;
