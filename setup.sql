@@ -3,34 +3,78 @@
 --
 -- 対象ノートブック: part1_snowflake_basics.ipynb (NB1)
 --                  part2_cortex_ai.ipynb (NB2)
--- データ         : data/ フォルダ内の CSV / JSON / PDF / 音声ファイル
---                  → このリポジトリの data/ に同梱
+--
+-- ============================================================
+-- ⚠️  ワークスペース名の設定
+--    ワークスペース名を変更した場合は下記の 2 行を同じ名前に更新してください
+--    （Snowsight の Cmd+H / Ctrl+H で一括置換が便利です）
+--
+--    変更箇所：
+--      Step 0 の LIST コマンド（3 か所）
+--      Step 2 の COPY FILES コマンド（1 か所）
+--
+--    ワークスペース名（現在の設定）:
+--      Snowflake_handson_basic_ai
+-- ============================================================
+--
+-- 【実行前に必ず以下の事前準備を完了してください】
+--
+-- [1] GitHub からファイルをダウンロード
+--     https://github.com/hilasnow/Snowflake_handson_basic_ai
+--     「Code」>「Download ZIP」で一括ダウンロードして展開
+--
+-- [2] Snowsight でワークスペースを新規作成
+--     ワークスペース名は必ず「Snowflake_handson_basic_ai」にしてください
+--     （別の名前にすると Step 0 のファイルチェックと Step 2 のコピーが失敗します）
+--
+-- [3] CoCo の「+ 新規追加」>「ファイルをアップロード」で展開した ZIP 内の
+--     全ファイル（ノートブック・SQL・data/ フォルダ）をアップロード
+--
+-- [4] この setup.sql を開いて全体を選択し一括実行
+--     Step 0 で必須ファイルの存在を確認し、不足の場合はセッションを停止します
 -- =============================================================
 
--- ===============================================================
--- !! Step 0 (事前作業) ファイルのアップロード !!
---
--- このスクリプトを実行する前に、以下の手順でファイルをアップロードしてください。
--- ※ ファイルがない状態で実行するとデータが空のまま終了します。
---
--- 1. リポジトリの data/ フォルダをローカルにダウンロード
---    https://github.com/hilasnow/Snowflake_handson_basic_ai
---
--- 2. setup.sql の Step 1〜3 を先に実行（DB・WH・ステージを作成）
---
--- 3. Snowsight で DATA_STAGE にファイルをアップロード:
---    左メニュー > Data > Databases > GLACIERSTYLE_DB
---    > EC_ANALYTICS_SCHEMA > Stages > DATA_STAGE を開く
---    右上の「+ Files」ボタンから data/ 内の全ファイルを選択
---    （CSV / JSON / PDF / voice_logs/*.mp3 をすべてアップロード）
---
--- 4. アップロード確認後、Step 4 以降を実行
--- ===============================================================
-
 -- -----------------------------------------------
--- Step 1. 環境設定
+-- Step 0. 前提確認（アップロード必須ファイルの存在チェック）
+--
+-- ⚠️  TODO: データファイルの構成が確定したら以下のコメントアウトを外して
+--           チェック対象ファイルを最終確認すること。
+--           確定前は Step 0 全体をコメントアウトしたまま実行する。
 -- -----------------------------------------------
 USE ROLE ACCOUNTADMIN;
+
+/*
+-- [0-1] CSVデータの確認（data/customers.csv）
+LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/customers.csv';
+SELECT IFF(
+    COUNT(*) = 0,
+    SYSTEM$ABORT_SESSION(),
+    '✅ [1/3] data/customers.csv を確認しました。'
+) AS check_csv
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- [0-2] 音声ログの確認（data/voice_logs/）
+LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/voice_logs/';
+SELECT IFF(
+    COUNT(*) = 0,
+    SYSTEM$ABORT_SESSION(),
+    '✅ [2/3] data/voice_logs/ を確認しました。'
+) AS check_voice
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- [0-3] PDFドキュメントの確認（data/faq_document.pdf）
+LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/faq_document.pdf';
+SELECT IFF(
+    COUNT(*) = 0,
+    SYSTEM$ABORT_SESSION(),
+    '✅ [3/3] data/faq_document.pdf を確認しました。セットアップを続行します。'
+) AS check_pdf
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+*/
+
+-- -----------------------------------------------
+-- Step 1. ウェアハウス作成
+-- -----------------------------------------------
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
 CREATE WAREHOUSE IF NOT EXISTS GLACIERSTYLE_WH
@@ -43,28 +87,25 @@ CREATE WAREHOUSE IF NOT EXISTS GLACIERSTYLE_WH
 USE WAREHOUSE GLACIERSTYLE_WH;
 
 -- -----------------------------------------------
--- Step 2. データベース・スキーマ
+-- Step 2. データベース・スキーマ・ステージ作成
 -- -----------------------------------------------
 CREATE OR REPLACE DATABASE GLACIERSTYLE_DB;
 CREATE OR REPLACE SCHEMA GLACIERSTYLE_DB.EC_ANALYTICS_SCHEMA;
 USE SCHEMA GLACIERSTYLE_DB.EC_ANALYTICS_SCHEMA;
 
--- -----------------------------------------------
--- Step 3. ステージ作成
--- -----------------------------------------------
 CREATE OR REPLACE STAGE DATA_STAGE
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
     DIRECTORY  = (ENABLE = TRUE);
 
--- !! ここで一旦止めてファイルをアップロードしてください（Step 0 参照）!!
+-- ワークスペースの data/ フォルダをステージへコピー
+COPY FILES INTO @DATA_STAGE
+FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
+PATTERN = 'data/.*';
 
--- -----------------------------------------------
--- Step 4. ステージ更新（アップロード後に実行）
--- -----------------------------------------------
 ALTER STAGE DATA_STAGE REFRESH;
 
 -- -----------------------------------------------
--- Step 5. ファイルフォーマット作成
+-- Step 3. ファイルフォーマット作成
 -- -----------------------------------------------
 CREATE OR REPLACE FILE FORMAT csv_format
     TYPE                     = 'CSV'
@@ -76,7 +117,7 @@ CREATE OR REPLACE FILE FORMAT json_format
     STRIP_OUTER_ARRAY = TRUE;
 
 -- -----------------------------------------------
--- Step 6. テーブル作成
+-- Step 4. テーブル作成
 -- -----------------------------------------------
 CREATE OR REPLACE TABLE dim_customers (
     customer_id       VARCHAR PRIMARY KEY,
@@ -221,13 +262,13 @@ CREATE OR REPLACE TABLE raw_ad_creatives (
 );
 
 -- -----------------------------------------------
--- Step 7. データロード（CSV / JSON）
+-- Step 5. データロード（CSV / JSON）
 -- -----------------------------------------------
-COPY INTO dim_customers    FROM @DATA_STAGE/customers.csv     FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO dim_products     FROM @DATA_STAGE/products.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO fact_orders      FROM @DATA_STAGE/orders.csv        FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO fact_payments    FROM @DATA_STAGE/payments.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO raw_ad_creatives FROM @DATA_STAGE/ad_creatives.csv  FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO dim_customers    FROM @DATA_STAGE/data/customers.csv     FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO dim_products     FROM @DATA_STAGE/data/products.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO fact_orders      FROM @DATA_STAGE/data/orders.csv        FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO fact_payments    FROM @DATA_STAGE/data/payments.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO raw_ad_creatives FROM @DATA_STAGE/data/ad_creatives.csv  FILE_FORMAT = (FORMAT_NAME = csv_format);
 
 INSERT INTO fact_web_logs (log_id, session_id, customer_id, event_timestamp, event_type,
     page_url, page_category, referrer_url, utm_source, utm_medium, utm_campaign,
@@ -237,7 +278,7 @@ SELECT $1:log_id::VARCHAR, $1:session_id::VARCHAR, $1:customer_id::VARCHAR,
     $1:page_category::VARCHAR, $1:referrer_url::VARCHAR, $1:utm_source::VARCHAR,
     $1:utm_medium::VARCHAR, $1:utm_campaign::VARCHAR, $1:device_type::VARCHAR,
     $1:browser::VARCHAR, $1:os::VARCHAR, $1:time_on_page::VARCHAR, $1:product_id::VARCHAR
-FROM @DATA_STAGE/web_logs.json (FILE_FORMAT => json_format);
+FROM @DATA_STAGE/data/web_logs.json (FILE_FORMAT => json_format);
 
 INSERT INTO raw_sns_mentions (post_id, platform, post_type, username, display_name,
     content, posted_at, likes, retweets, replies, hashtags, mentioned_products, media_urls)
@@ -245,7 +286,7 @@ SELECT $1:post_id::VARCHAR, $1:platform::VARCHAR, $1:post_type::VARCHAR,
     $1:username::VARCHAR, $1:display_name::VARCHAR, $1:content::VARCHAR,
     $1:posted_at::TIMESTAMP, $1:likes::INTEGER, $1:retweets::INTEGER,
     $1:replies::INTEGER, $1:hashtags::ARRAY, $1:mentioned_products::ARRAY, $1:media_urls::ARRAY
-FROM @DATA_STAGE/sns_logs.json (FILE_FORMAT => json_format);
+FROM @DATA_STAGE/data/sns_logs.json (FILE_FORMAT => json_format);
 
 INSERT INTO raw_voice_logs (call_id, scenario_id, audio_file, call_duration_sec,
     call_start_time, call_end_time, category, agent_id, customer_phone, customer_id, call_type)
@@ -253,10 +294,10 @@ SELECT $1:call_id::VARCHAR, $1:scenario_id::VARCHAR, $1:audio_file::VARCHAR,
     $1:call_duration_sec::NUMBER(10,2), $1:call_start_time::TIMESTAMP,
     $1:call_end_time::TIMESTAMP, $1:category::VARCHAR, $1:agent_id::VARCHAR,
     $1:customer_phone::VARCHAR, $1:customer_id::VARCHAR, $1:call_type::VARCHAR
-FROM @DATA_STAGE/voice_logs/voice_logs_metadata.json (FILE_FORMAT => json_format);
+FROM @DATA_STAGE/data/voice_logs/voice_logs_metadata.json (FILE_FORMAT => json_format);
 
 -- -----------------------------------------------
--- Step 8. AI_TRANSCRIBE（音声→テキスト）
+-- Step 6. AI_TRANSCRIBE（音声→テキスト）
 -- -----------------------------------------------
 MERGE INTO raw_voice_logs AS target
 USING (
@@ -264,13 +305,13 @@ USING (
         SPLIT_PART(relative_path, '/', -1) AS file_name,
         AI_TRANSCRIBE(TO_FILE('@DATA_STAGE', relative_path)):text::TEXT AS transcribed_text
     FROM DIRECTORY(@DATA_STAGE)
-    WHERE REGEXP_LIKE(relative_path, 'voice_logs.*\\.mp3', 'i')
+    WHERE REGEXP_LIKE(relative_path, 'data/voice_logs.*\\.mp3', 'i')
 ) AS source
 ON target.audio_file = source.file_name
 WHEN MATCHED THEN UPDATE SET target.transcribed_text = source.transcribed_text;
 
 -- -----------------------------------------------
--- Step 9. AI_PARSE_DOCUMENT（PDF→構造化）
+-- Step 7. AI_PARSE_DOCUMENT（PDF→構造化）
 -- -----------------------------------------------
 CREATE OR REPLACE TABLE raw_faq_documents AS
 WITH parsed AS (
@@ -279,7 +320,7 @@ WITH parsed AS (
         {'mode': 'LAYOUT', 'page_split': false}
     ) AS contents
     FROM DIRECTORY(@DATA_STAGE)
-    WHERE LOWER(relative_path) = 'faq_document.pdf'
+    WHERE LOWER(relative_path) = 'data/faq_document.pdf'
 )
 SELECT * FROM parsed;
 
@@ -290,13 +331,13 @@ WITH parsed AS (
         {'mode': 'LAYOUT', 'extract_images': true, 'page_split': false}
     ) AS contents
     FROM DIRECTORY(@DATA_STAGE)
-    WHERE LOWER(relative_path) = 'operation_manual_w_images.pdf'
+    WHERE LOWER(relative_path) = 'data/operation_manual_w_images.pdf'
 )
 SELECT * FROM parsed;
 
 -- -----------------------------------------------
--- Step 10. セットアップ確認
--- 各テーブルの件数が 0 の場合はファイルアップロードが未完了です。
+-- Step 8. セットアップ確認
+-- 各テーブルの件数が 0 の場合はデータロードに失敗しています。
 -- -----------------------------------------------
 SELECT 'dim_customers'    AS table_name, COUNT(*) AS row_count FROM dim_customers    UNION ALL
 SELECT 'dim_products'     AS table_name, COUNT(*) AS row_count FROM dim_products     UNION ALL
