@@ -10,7 +10,7 @@
 --    （Snowsight の Cmd+H / Ctrl+H で一括置換が便利です）
 --
 --    変更箇所：
---      Step 0 の LIST コマンド（3 か所）
+--      Step 0 の LIST コマンド（4 か所）
 --      Step 2 の COPY FILES コマンド（1 か所）
 --
 --    ワークスペース名（現在の設定）:
@@ -49,25 +49,34 @@ LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/d
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [1/3] data/customers.csv を確認しました。'
+    '✅ [1/4] data/customers.csv を確認しました。'
 ) AS check_csv
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
--- [0-2] 音声ログの確認（data/voice_logs/）
+-- [0-2] 仕入先商品データの確認（data/supplier_products_v2.csv）
+LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/supplier_products_v2.csv';
+SELECT IFF(
+    COUNT(*) = 0,
+    SYSTEM$ABORT_SESSION(),
+    '✅ [2/4] data/supplier_products_v2.csv を確認しました。'
+) AS check_supplier
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- [0-3] 音声ログの確認（data/voice_logs/）
 LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/voice_logs/';
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [2/3] data/voice_logs/ を確認しました。'
+    '✅ [3/4] data/voice_logs/ を確認しました。'
 ) AS check_voice
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
--- [0-3] PDFドキュメントの確認（data/faq_document.pdf）
+-- [0-4] PDFドキュメントの確認（data/faq_document.pdf）
 LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/faq_document.pdf';
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [3/3] data/faq_document.pdf を確認しました。セットアップを続行します。'
+    '✅ [4/4] data/faq_document.pdf を確認しました。セットアップを続行します。'
 ) AS check_pdf
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 */
