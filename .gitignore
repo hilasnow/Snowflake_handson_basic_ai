@@ -16,3 +16,6 @@ __pycache__/
 .env
 *.env
 secrets.json
+
+# 画像生成元（大容量グリッド画像）
+images/*/original/
