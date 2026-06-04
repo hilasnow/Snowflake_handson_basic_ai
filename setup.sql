@@ -10,7 +10,7 @@
 --    （Snowsight の Cmd+H / Ctrl+H で一括置換が便利です）
 --
 --    変更箇所：
---      Step 0 の LIST コマンド（4 か所）
+--      Step 0 の LIST コマンド（3 か所）
 --      Step 2 の COPY FILES コマンド（1 か所）
 --
 --    ワークスペース名（現在の設定）:
@@ -36,20 +36,15 @@
 
 -- -----------------------------------------------
 -- Step 0. 前提確認（アップロード必須ファイルの存在チェック）
---
--- ⚠️  TODO: データファイルの構成が確定したら以下のコメントアウトを外して
---           チェック対象ファイルを最終確認すること。
---           確定前は Step 0 全体をコメントアウトしたまま実行する。
 -- -----------------------------------------------
 USE ROLE ACCOUNTADMIN;
 
-/*
 -- [0-1] CSVデータの確認（data/customers.csv）
 LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/customers.csv';
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [1/4] data/customers.csv を確認しました。'
+    '✅ [1/3] data/customers.csv を確認しました。'
 ) AS check_csv
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
@@ -58,7 +53,7 @@ LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/d
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [2/4] data/supplier_products_v2.csv を確認しました。'
+    '✅ [2/3] data/supplier_products_v2.csv を確認しました。'
 ) AS check_supplier
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
@@ -67,19 +62,9 @@ LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/d
 SELECT IFF(
     COUNT(*) = 0,
     SYSTEM$ABORT_SESSION(),
-    '✅ [3/4] data/voice_logs/ を確認しました。'
+    '✅ [3/3] data/voice_logs/ を確認しました。セットアップを続行します。'
 ) AS check_voice
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
-
--- [0-4] PDFドキュメントの確認（data/faq_document.pdf）
-LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/faq_document.pdf';
-SELECT IFF(
-    COUNT(*) = 0,
-    SYSTEM$ABORT_SESSION(),
-    '✅ [4/4] data/faq_document.pdf を確認しました。セットアップを続行します。'
-) AS check_pdf
-FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
-*/
 
 -- -----------------------------------------------
 -- Step 1. ウェアハウス作成
