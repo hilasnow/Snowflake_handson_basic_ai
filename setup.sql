@@ -261,14 +261,24 @@ CREATE OR REPLACE TABLE raw_ad_creatives (
     spend           DECIMAL(10,2)
 );
 
+CREATE OR REPLACE TABLE supplier_products_v2 (
+    supplier_product_id   VARCHAR PRIMARY KEY,
+    supplier_product_name VARCHAR,
+    supplier_name         VARCHAR,
+    supplier_price        DECIMAL(10,2),
+    supplier_category     VARCHAR,
+    original_product_id   VARCHAR  -- 正解データ（Part2 精度検証用）
+);
+
 -- -----------------------------------------------
 -- Step 5. データロード（CSV / JSON）
 -- -----------------------------------------------
-COPY INTO dim_customers    FROM @DATA_STAGE/data/customers.csv     FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO dim_products     FROM @DATA_STAGE/data/products.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO fact_orders      FROM @DATA_STAGE/data/orders.csv        FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO fact_payments    FROM @DATA_STAGE/data/payments.csv      FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO raw_ad_creatives FROM @DATA_STAGE/data/ad_creatives.csv  FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO dim_customers         FROM @DATA_STAGE/data/customers.csv          FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO dim_products          FROM @DATA_STAGE/data/products.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO fact_orders           FROM @DATA_STAGE/data/orders.csv             FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO fact_payments         FROM @DATA_STAGE/data/payments.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/ad_creatives.csv       FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO supplier_products_v2  FROM @DATA_STAGE/data/supplier_products_v2.csv FILE_FORMAT = (FORMAT_NAME = csv_format) ON_ERROR = 'CONTINUE';
 
 INSERT INTO fact_web_logs (log_id, session_id, customer_id, event_timestamp, event_type,
     page_url, page_category, referrer_url, utm_source, utm_medium, utm_campaign,
