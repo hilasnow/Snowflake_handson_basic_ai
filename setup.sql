@@ -171,40 +171,6 @@ CREATE OR REPLACE TABLE fact_orders (
     order_status        VARCHAR
 );
 
-CREATE OR REPLACE TABLE fact_payments (
-    payment_id         VARCHAR PRIMARY KEY,
-    order_id           VARCHAR,
-    payment_datetime   TIMESTAMP,
-    card_brand         VARCHAR,
-    card_last4         VARCHAR,
-    payment_amount     DECIMAL(10,2),
-    authorization_code VARCHAR,
-    payment_status     VARCHAR,
-    fraud_score        DECIMAL(5,2),
-    device_fingerprint VARCHAR,
-    ip_address         VARCHAR,
-    billing_country    VARCHAR
-);
-
-CREATE OR REPLACE TABLE fact_web_logs (
-    log_id          VARCHAR PRIMARY KEY,
-    session_id      VARCHAR,
-    customer_id     VARCHAR,
-    event_timestamp TIMESTAMP,
-    event_type      VARCHAR,
-    page_url        VARCHAR,
-    page_category   VARCHAR,
-    referrer_url    VARCHAR,
-    utm_source      VARCHAR,
-    utm_medium      VARCHAR,
-    utm_campaign    VARCHAR,
-    device_type     VARCHAR,
-    browser         VARCHAR,
-    os              VARCHAR,
-    time_on_page    INTEGER,
-    product_id      VARCHAR
-);
-
 CREATE OR REPLACE TABLE raw_sns_mentions (
     post_id            VARCHAR PRIMARY KEY,
     platform           VARCHAR,
@@ -262,20 +228,9 @@ CREATE OR REPLACE TABLE supplier_products_v2 (
 COPY INTO dim_customers         FROM @DATA_STAGE/data/customers.csv          FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO dim_products          FROM @DATA_STAGE/data/products.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO fact_orders           FROM @DATA_STAGE/data/orders.csv             FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO fact_payments         FROM @DATA_STAGE/data/payments.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
 -- ad_creatives.csv（EC系）はロードしない（金融シナリオでは不使用）
 COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/fin_ad_creatives.csv   FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO supplier_products_v2  FROM @DATA_STAGE/data/supplier_products_v2.csv FILE_FORMAT = (FORMAT_NAME = csv_format) ON_ERROR = 'CONTINUE';
-
-INSERT INTO fact_web_logs (log_id, session_id, customer_id, event_timestamp, event_type,
-    page_url, page_category, referrer_url, utm_source, utm_medium, utm_campaign,
-    device_type, browser, os, time_on_page, product_id)
-SELECT $1:log_id::VARCHAR, $1:session_id::VARCHAR, $1:customer_id::VARCHAR,
-    $1:event_timestamp::TIMESTAMP, $1:event_type::VARCHAR, $1:page_url::VARCHAR,
-    $1:page_category::VARCHAR, $1:referrer_url::VARCHAR, $1:utm_source::VARCHAR,
-    $1:utm_medium::VARCHAR, $1:utm_campaign::VARCHAR, $1:device_type::VARCHAR,
-    $1:browser::VARCHAR, $1:os::VARCHAR, $1:time_on_page::VARCHAR, $1:product_id::VARCHAR
-FROM @DATA_STAGE/data/web_logs.json (FILE_FORMAT => json_format);
 
 INSERT INTO raw_sns_mentions (post_id, platform, post_type, username, display_name,
     content, posted_at, likes, retweets, replies, hashtags, mentioned_products, media_urls)
@@ -308,40 +263,13 @@ ON target.audio_file = source.file_name
 WHEN MATCHED THEN UPDATE SET target.transcribed_text = source.transcribed_text;
 
 -- -----------------------------------------------
--- Step 7. AI_PARSE_DOCUMENT（PDF→構造化）
--- -----------------------------------------------
-CREATE OR REPLACE TABLE raw_faq_documents AS
-WITH parsed AS (
-    SELECT *, AI_PARSE_DOCUMENT(
-        TO_FILE('@DATA_STAGE', relative_path),
-        {'mode': 'LAYOUT', 'page_split': false}
-    ) AS contents
-    FROM DIRECTORY(@DATA_STAGE)
-    WHERE LOWER(relative_path) = 'data/faq_document.pdf'
-)
-SELECT * FROM parsed;
-
-CREATE OR REPLACE TABLE raw_operation_manuals AS
-WITH parsed AS (
-    SELECT *, AI_PARSE_DOCUMENT(
-        TO_FILE('@DATA_STAGE', relative_path),
-        {'mode': 'LAYOUT', 'extract_images': true, 'page_split': false}
-    ) AS contents
-    FROM DIRECTORY(@DATA_STAGE)
-    WHERE LOWER(relative_path) = 'data/operation_manual_w_images.pdf'
-)
-SELECT * FROM parsed;
-
--- -----------------------------------------------
--- Step 8. セットアップ確認
+-- Step 7. セットアップ確認
 -- 各テーブルの件数が 0 の場合はデータロードに失敗しています。
 -- raw_ad_creatives は FIN- プレフィックスのデータが 64 件入っていれば OK。
 -- -----------------------------------------------
 SELECT 'dim_customers'    AS table_name, COUNT(*) AS row_count FROM dim_customers    UNION ALL
 SELECT 'dim_products'     AS table_name, COUNT(*) AS row_count FROM dim_products     UNION ALL
 SELECT 'fact_orders'      AS table_name, COUNT(*) AS row_count FROM fact_orders      UNION ALL
-SELECT 'fact_payments'    AS table_name, COUNT(*) AS row_count FROM fact_payments    UNION ALL
-SELECT 'fact_web_logs'    AS table_name, COUNT(*) AS row_count FROM fact_web_logs    UNION ALL
 SELECT 'raw_sns_mentions' AS table_name, COUNT(*) AS row_count FROM raw_sns_mentions UNION ALL
 SELECT 'raw_voice_logs'   AS table_name, COUNT(*) AS row_count FROM raw_voice_logs   UNION ALL
 SELECT 'raw_ad_creatives' AS table_name, COUNT(*) AS row_count FROM raw_ad_creatives
