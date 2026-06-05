@@ -272,6 +272,7 @@ COPY INTO dim_products          FROM @DATA_STAGE/data/products.csv           FIL
 COPY INTO fact_orders           FROM @DATA_STAGE/data/orders.csv             FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO fact_payments         FROM @DATA_STAGE/data/payments.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/ad_creatives.csv       FILE_FORMAT = (FORMAT_NAME = csv_format);
+COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/fin_ad_creatives.csv   FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO supplier_products_v2  FROM @DATA_STAGE/data/supplier_products_v2.csv FILE_FORMAT = (FORMAT_NAME = csv_format) ON_ERROR = 'CONTINUE';
 
 INSERT INTO fact_web_logs (log_id, session_id, customer_id, event_timestamp, event_type,

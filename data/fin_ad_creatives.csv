@@ -1,0 +1,9 @@
+creative_id,campaign_id,creative_name,creative_type,image_file_path,copy_text,headline,cta_text,target_segment,platform,start_date,end_date,impressions,clicks,conversions,spend
+FIN-001,CAM-FIN-01,2025Q1_投資_A01,image,001_1.png,,,詳しく見る,投資,web,2025-01-01,2025-01-31,45000,540,27,135000.00
+FIN-002,CAM-FIN-01,2025Q1_投資_A02,image,001_2.png,,,詳しく見る,投資,web,2025-01-01,2025-01-31,38000,684,48,114000.00
+FIN-003,CAM-FIN-01,2025Q1_保険_A01,image,001_3.png,,,詳しく見る,保険,web,2025-01-01,2025-01-31,62000,1550,62,155000.00
+FIN-004,CAM-FIN-01,2025Q1_保険_A02,image,001_4.png,,,詳しく見る,保険,web,2025-01-01,2025-01-31,51000,765,46,127500.00
+FIN-005,CAM-FIN-01,2025Q1_クレカ_A01,image,001_5.png,,,詳しく見る,クレジットカード,web,2025-01-01,2025-01-31,70000,1330,67,196000.00
+FIN-006,CAM-FIN-01,2025Q1_クレカ_A02,image,001_6.png,,,詳しく見る,クレジットカード,web,2025-01-01,2025-01-31,58000,928,46,162400.00
+FIN-007,CAM-FIN-01,2025Q1_保険_A03,image,001_7.png,,,詳しく見る,保険,web,2025-01-01,2025-01-31,55000,1265,38,137500.00
+FIN-008,CAM-FIN-01,2025Q1_投資_A03,image,001_8.png,,,詳しく見る,投資,web,2025-01-01,2025-01-31,42000,714,57,126000.00
