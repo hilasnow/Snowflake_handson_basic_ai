@@ -91,15 +91,10 @@ CREATE OR REPLACE STAGE DATA_STAGE
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
     DIRECTORY  = (ENABLE = TRUE);
 
--- ワークスペースの data/ フォルダをステージへコピー
+-- ワークスペースの data/ フォルダをステージへコピー（CSV・JSON・音声・画像を一括）
 COPY FILES INTO @DATA_STAGE
 FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
 PATTERN = 'data/.*';
-
--- Part3 バナー広告画像をステージへコピー
-COPY FILES INTO @DATA_STAGE
-FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
-PATTERN = 'images/part3/[0-9]+_[0-9]+[.]png';
 
 ALTER STAGE DATA_STAGE REFRESH;
 

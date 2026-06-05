@@ -16,7 +16,7 @@
 --
 -- 前提:
 --   setup.sql 実行済み (GLACIERSTYLE_DB / EC_ANALYTICS_SCHEMA / DATA_STAGE)
---   images/part3/ に ad_001.png ~ ad_008.png が存在すること
+--   data/images/part3/ に ad_001.png ~ ad_008.png が存在すること
 -- =============================================================
 
 USE ROLE ACCOUNTADMIN;
@@ -33,7 +33,7 @@ USE WAREHOUSE GLACIERSTYLE_WH;
 
 COPY FILES INTO @DATA_STAGE
   FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
-  PATTERN = 'images/part3/ad_.*[.]png';
+  PATTERN = 'data/images/part3/ad_.*[.]png';
 
 -- ディレクトリを更新
 ALTER STAGE DATA_STAGE REFRESH;
@@ -41,7 +41,7 @@ ALTER STAGE DATA_STAGE REFRESH;
 -- アップロード確認 (8件あること)
 SELECT relative_path, size
 FROM DIRECTORY(@DATA_STAGE)
-WHERE relative_path LIKE 'images/part3/ad_%.png'
+WHERE relative_path LIKE 'data/images/part3/ad_%.png'
 ORDER BY relative_path;
 
 -- -----------------------------------------------
@@ -79,7 +79,7 @@ has_number_highlight: true or false
     )
   ) AS features_json
 FROM DIRECTORY(@DATA_STAGE)
-WHERE relative_path = 'images/part3/ad_001.png';
+WHERE relative_path = 'data/images/part3/ad_001.png';
 
 -- -----------------------------------------------
 -- Step 3: 全 8 枚一括分析 → テーブル保存
@@ -123,7 +123,7 @@ has_number_highlight: true or false
   features_json:is_complex::BOOLEAN            AS is_complex,
   features_json:has_number_highlight::BOOLEAN  AS has_number_highlight
 FROM DIRECTORY(@DATA_STAGE)
-WHERE relative_path LIKE 'images/part3/ad_%.png'
+WHERE relative_path LIKE 'data/images/part3/ad_%.png'
 ORDER BY relative_path;
 
 -- -----------------------------------------------
