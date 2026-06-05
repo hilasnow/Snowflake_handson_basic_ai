@@ -21,6 +21,9 @@ secrets.json
 images/*/original/
 data/images/*/original/
 
+# 画像生成プロンプト（CoWorkに読まれないようステージに入れない）
+data/images/*/image_generation_prompt.md
+
 # 作業用テスト・スクラッチファイル
 test.sql
 
