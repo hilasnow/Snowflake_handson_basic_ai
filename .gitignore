@@ -23,3 +23,6 @@ data/images/*/original/
 
 # 作業用テスト・スクラッチファイル
 test.sql
+
+# 進捗メモ（個人用）
+jbs_handson_progress.md
