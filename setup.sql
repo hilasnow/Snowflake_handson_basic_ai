@@ -271,7 +271,7 @@ COPY INTO dim_customers         FROM @DATA_STAGE/data/customers.csv          FIL
 COPY INTO dim_products          FROM @DATA_STAGE/data/products.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO fact_orders           FROM @DATA_STAGE/data/orders.csv             FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO fact_payments         FROM @DATA_STAGE/data/payments.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
-COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/ad_creatives.csv       FILE_FORMAT = (FORMAT_NAME = csv_format);
+-- ad_creatives.csv（EC系）はロードしない（金融シナリオでは不使用）
 COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/fin_ad_creatives.csv   FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO supplier_products_v2  FROM @DATA_STAGE/data/supplier_products_v2.csv FILE_FORMAT = (FORMAT_NAME = csv_format) ON_ERROR = 'CONTINUE';
 
