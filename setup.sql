@@ -96,6 +96,11 @@ COPY FILES INTO @DATA_STAGE
 FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
 PATTERN = 'data/.*';
 
+-- Part3 バナー広告画像をステージへコピー
+COPY FILES INTO @DATA_STAGE
+FROM 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/'
+PATTERN = 'images/part3/[0-9]+_[0-9]+[.]png';
+
 ALTER STAGE DATA_STAGE REFRESH;
 
 -- -----------------------------------------------
