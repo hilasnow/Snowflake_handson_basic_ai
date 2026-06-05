@@ -35,40 +35,10 @@
 -- =============================================================
 
 -- -----------------------------------------------
--- Step 0. 前提確認（アップロード必須ファイルの存在チェック）
+-- Step 1. ウェアハウス作成
 -- -----------------------------------------------
 USE ROLE ACCOUNTADMIN;
 
--- [0-1] CSVデータの確認（data/customers.csv）
-LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/customers.csv';
-SELECT IFF(
-    COUNT(*) = 0,
-    SYSTEM$ABORT_SESSION(),
-    '✅ [1/3] data/customers.csv を確認しました。'
-) AS check_csv
-FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
-
--- [0-2] 仕入先商品データの確認（data/supplier_products_v2.csv）
-LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/supplier_products_v2.csv';
-SELECT IFF(
-    COUNT(*) = 0,
-    SYSTEM$ABORT_SESSION(),
-    '✅ [2/3] data/supplier_products_v2.csv を確認しました。'
-) AS check_supplier
-FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
-
--- [0-3] 音声ログの確認（data/voice_logs/）
-LIST 'snow://workspace/USER$.PUBLIC."Snowflake_handson_basic_ai"/versions/live/data/voice_logs/';
-SELECT IFF(
-    COUNT(*) = 0,
-    SYSTEM$ABORT_SESSION(),
-    '✅ [3/3] data/voice_logs/ を確認しました。セットアップを続行します。'
-) AS check_voice
-FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
-
--- -----------------------------------------------
--- Step 1. ウェアハウス作成
--- -----------------------------------------------
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
 CREATE WAREHOUSE IF NOT EXISTS AI_HANDSON_WH
