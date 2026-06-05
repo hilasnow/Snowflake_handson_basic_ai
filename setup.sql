@@ -71,21 +71,21 @@ FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 -- -----------------------------------------------
 ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
 
-CREATE WAREHOUSE IF NOT EXISTS GLACIERSTYLE_WH
+CREATE WAREHOUSE IF NOT EXISTS AI_HANDSON_WH
     WAREHOUSE_SIZE      = 'xsmall'
     WAREHOUSE_TYPE      = 'standard'
     AUTO_SUSPEND        = 60
     AUTO_RESUME         = TRUE
     INITIALLY_SUSPENDED = TRUE;
 
-USE WAREHOUSE GLACIERSTYLE_WH;
+USE WAREHOUSE AI_HANDSON_WH;
 
 -- -----------------------------------------------
 -- Step 2. データベース・スキーマ・ステージ作成
 -- -----------------------------------------------
-CREATE OR REPLACE DATABASE GLACIERSTYLE_DB;
-CREATE OR REPLACE SCHEMA GLACIERSTYLE_DB.EC_ANALYTICS_SCHEMA;
-USE SCHEMA GLACIERSTYLE_DB.EC_ANALYTICS_SCHEMA;
+CREATE OR REPLACE DATABASE AI_HANDSON_DB;
+CREATE OR REPLACE SCHEMA AI_HANDSON_DB.ANALYTICS;
+USE SCHEMA AI_HANDSON_DB.ANALYTICS;
 
 CREATE OR REPLACE STAGE DATA_STAGE
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
@@ -238,17 +238,9 @@ CREATE OR REPLACE TABLE raw_voice_logs (
 
 CREATE OR REPLACE TABLE raw_ad_creatives (
     creative_id     VARCHAR PRIMARY KEY,
-    campaign_id     VARCHAR,
     creative_name   VARCHAR,
-    creative_type   VARCHAR,
     image_file_path VARCHAR,
-    copy_text       TEXT,
-    headline        VARCHAR,
-    cta_text        VARCHAR,
     target_segment  VARCHAR,
-    platform        VARCHAR,
-    start_date      DATE,
-    end_date        DATE,
     impressions     INTEGER,
     clicks          INTEGER,
     conversions     INTEGER,
@@ -343,6 +335,7 @@ SELECT * FROM parsed;
 -- -----------------------------------------------
 -- Step 8. セットアップ確認
 -- 各テーブルの件数が 0 の場合はデータロードに失敗しています。
+-- raw_ad_creatives は FIN- プレフィックスのデータが 64 件入っていれば OK。
 -- -----------------------------------------------
 SELECT 'dim_customers'    AS table_name, COUNT(*) AS row_count FROM dim_customers    UNION ALL
 SELECT 'dim_products'     AS table_name, COUNT(*) AS row_count FROM dim_products     UNION ALL
@@ -353,3 +346,10 @@ SELECT 'raw_sns_mentions' AS table_name, COUNT(*) AS row_count FROM raw_sns_ment
 SELECT 'raw_voice_logs'   AS table_name, COUNT(*) AS row_count FROM raw_voice_logs   UNION ALL
 SELECT 'raw_ad_creatives' AS table_name, COUNT(*) AS row_count FROM raw_ad_creatives
 ORDER BY table_name;
+
+-- raw_ad_creatives の内訳確認（FIN- データのみ 64 件であること）
+SELECT
+    COUNT(*)                                        AS total_rows,
+    COUNT(CASE WHEN creative_id LIKE 'FIN-%' THEN 1 END) AS fin_rows,
+    COUNT(CASE WHEN creative_id NOT LIKE 'FIN-%' THEN 1 END) AS other_rows
+FROM raw_ad_creatives;
