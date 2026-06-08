@@ -1,19 +1,9 @@
 -- =============================================================
--- setup.sql  –  JBS ハンズオン 事前セットアップ
---
--- 対象ノートブック: part1_snowflake_basics.ipynb (NB1)
---                  part2_cortex_ai.ipynb (NB2)
---
+-- setup.sql  –  事前セットアップ
 -- ============================================================
--- ⚠️  ワークスペース名の設定
---    ワークスペース名を変更した場合は下記の 2 行を同じ名前に更新してください
---    （Snowsight の Cmd+H / Ctrl+H で一括置換が便利です）
---
---    変更箇所：
---      Step 0 の LIST コマンド（3 か所）
---      Step 2 の COPY FILES コマンド（1 か所）
---
---    ワークスペース名（現在の設定）:
+-- ⚠️  ワークスペース名は以下に設定してください。
+--    (途中コマンドの引数になっているため)
+--    ワークスペース名:
 --      Snowflake_handson_basic_ai
 -- ============================================================
 --
@@ -198,7 +188,6 @@ CREATE OR REPLACE TABLE supplier_products_v2 (
 COPY INTO dim_customers         FROM @DATA_STAGE/data/customers.csv          FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO dim_products          FROM @DATA_STAGE/data/products.csv           FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO fact_orders           FROM @DATA_STAGE/data/orders.csv             FILE_FORMAT = (FORMAT_NAME = csv_format);
--- ad_creatives.csv（EC系）はロードしない（金融シナリオでは不使用）
 COPY INTO raw_ad_creatives      FROM @DATA_STAGE/data/fin_ad_creatives.csv   FILE_FORMAT = (FORMAT_NAME = csv_format);
 COPY INTO supplier_products_v2  FROM @DATA_STAGE/data/supplier_products_v2.csv FILE_FORMAT = (FORMAT_NAME = csv_format) ON_ERROR = 'CONTINUE';
 
